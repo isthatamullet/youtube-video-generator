@@ -1,0 +1,33 @@
+{
+  "video_settings": {
+    "resolution": [
+      1920,
+      1080
+    ],
+    "target_duration_seconds": 60,
+    "fps": 30
+  },
+  "pacing_and_editing": {
+    "b_roll_duration_seconds": 4,
+    "padding_between_sentences_seconds": 0.5,
+    "transition_type": "crossfade"
+  },
+  "audio_and_voice": {
+    "voice_model": "en-US-ChristopherNeural",
+    "tts_rate": "+0%",
+    "tts_pitch": "+0Hz",
+    "background_music_volume": 0.1
+  },
+  "visuals_and_subtitles": {
+    "font_family": "/usr/share/fonts/truetype/lato/Lato-Regular.ttf",
+    "font_size": 70,
+    "text_color": "white",
+    "stroke_color": "black",
+    "stroke_width": 2,
+    "max_words_per_line": 5,
+    "active_word_highlight_color": "yellow"
+  },
+  "prompts": {
+    "script_generation_system_prompt": "You are an expert YouTube Shorts scriptwriter. Write a highly engaging, fast-paced script about the provided topic. Start with a powerful 3-second hook. Break the script down into short sentences. Output ONLY the JSON array of objects, where each object has a 'text' field (the spoken line) and a 'visual_query' field (a 2-3 word query to search for background B-roll)."
+  }
+}
