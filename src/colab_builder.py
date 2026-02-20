@@ -135,7 +135,7 @@ def create_colab_notebook(topic_slug, config, scenes, pexels_api_key):
             "    # We'll default to 'a' (American English) and 'a_v2' (Male voice)\n",
             "    # We can eventually map our tone_hint to specific Kokoro voices if needed\n",
             "    lang_code = 'a'\n",
-            "    voice = 'a_v2'  # Or 'a_f1' for female\n",
+            "    voice = 'am_adam'  # Or 'af_heart' for female\n",
             "    \n",
             "    print(f'Loading Kokoro pipeline for {lang_code}...')\n",
             "    pipeline = KPipeline(lang_code=lang_code)\n",
