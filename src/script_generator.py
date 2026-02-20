@@ -7,9 +7,11 @@ from .utils import load_config, get_env_var
 class Scene(BaseModel):
     text: str
     visual_query: str
+    tone_hint: str  # e.g., "hook", "explainer", "frustrated", "authoritative"
 
 class Script(BaseModel):
     scenes: list[Scene]
+    pacing_efficiency: int  # 1-10 self-score on retention potential
 
 def generate_script(topic: str) -> list[dict]:
     """Generates a structured script using Gemini 3.1 Pro via the google-genai library."""
@@ -35,6 +37,7 @@ def generate_script(topic: str) -> list[dict]:
     try:
         script_data = json.loads(response.text)
         print(f"Successfully generated a script with {len(script_data.get('scenes', []))} scenes.")
+        print(f"Pacing Efficiency Score: {script_data.get('pacing_efficiency', 'N/A')}/10")
         return script_data['scenes']
     except Exception as e:
         print(f"Error parsing Gemini response: {e}")
