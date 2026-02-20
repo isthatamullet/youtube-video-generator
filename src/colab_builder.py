@@ -18,7 +18,7 @@ def create_colab_notebook(topic_slug, config, scenes, pexels_api_key):
         "source": [
             "# 1. Setup Environment\n",
             "!apt-get install -qq fonts-liberation > /dev/null 2>&1\n",
-            "!pip install -q edge-tts openai-whisper ffmpeg-python requests\n",
+            "!pip install -q edge-tts openai-whisper ffmpeg-python requests google-genai pydantic\n",
             "\n",
             "import os\n",
             "import json\n",
@@ -60,14 +60,70 @@ def create_colab_notebook(topic_slug, config, scenes, pexels_api_key):
         ]
     }
     
-    # 3. Voiceover & Subtitles Generation
+    # 3. Director's Console (AI Script Rewrite)
+    system_prompt = config['prompts']['script_generation_system_prompt']
+    system_prompt_escaped = system_prompt.replace('\n', '\\n').replace('"', '\\"')
+    
+    cell_directors_console = {
+        "cell_type": "code",
+        "execution_count": None,
+        "metadata": {},
+        "outputs": [],
+        "source": [
+            "# 3. Director's Console (Optional Script Rewrite)\n",
+            "# @title Rewrite Script with Gemini 3.1 Pro\n",
+            "# @markdown Enter your Gemini API key and prompt, then run this cell to overwrite the script.\n",
+            "gemini_api_key = '' # @param {type:\"string\"}\n",
+            "rewrite_prompt = 'Rewrite scene 4 to be funnier' # @param {type:\"string\"}\n",
+            "\n",
+            "if gemini_api_key and rewrite_prompt:\n",
+            "    import json\n",
+            "    from google import genai\n",
+            "    from pydantic import BaseModel\n",
+            "\n",
+            "    class SceneSchema(BaseModel):\n",
+            "        text: str\n",
+            "        visual_query: str\n",
+            "        tone_hint: str\n",
+            "\n",
+            "    class ScriptSchema(BaseModel):\n",
+            "        scenes: list[SceneSchema]\n",
+            "        pacing_efficiency: int\n",
+            "\n",
+            "    print('Consulting Gemini 3.1 Pro...')\n",
+            "    client = genai.Client(api_key=gemini_api_key)\n",
+            f"    system_prompt = \"{system_prompt_escaped}\"\n",
+            "\n",
+            "    current_script_context = json.dumps(SCENES, indent=2)\n",
+            "    full_prompt = f\"{system_prompt}\\n\\nCurrent Script:\\n{current_script_context}\\n\\nUser Request: {rewrite_prompt}\"\n",
+            "\n",
+            "    response = client.models.generate_content(\n",
+            "        model='gemini-3.1-pro-preview',\n",
+            "        contents=full_prompt,\n",
+            "        config=genai.types.GenerateContentConfig(\n",
+            "            response_mime_type='application/json',\n",
+            "            response_schema=ScriptSchema,\n",
+            "            temperature=0.7\n",
+            "        )\n",
+            "    )\n",
+            "\n",
+            "    script_data = json.loads(response.text)\n",
+            "    SCENES = script_data['scenes']\n",
+            "    print(f\"\\nScript updated successfully! (New Pacing Score: {script_data.get('pacing_efficiency', 'N/A')}/10)\")\n",
+            "    print(\"You can now run Cell 4 to generate the new voiceovers.\")\n",
+            "else:\n",
+            "    print('Skipping rewrite. Provide both an API key and a prompt to rewrite.')\n"
+        ]
+    }
+    
+    # 4. Voiceover & Subtitles Generation
     cell_audio = {
         "cell_type": "code",
         "execution_count": None,
         "metadata": {},
         "outputs": [],
         "source": [
-            "# 3. Generate Audio & Timestamps\n",
+            "# 4. Generate Audio & Timestamps\n",
             "import edge_tts\n",
             "\n",
             "async def generate_voiceover():\n",
@@ -102,14 +158,14 @@ def create_colab_notebook(topic_slug, config, scenes, pexels_api_key):
         ]
     }
     
-    # 4. Pexels B-Roll
+    # 5. Pexels B-Roll
     cell_broll = {
         "cell_type": "code",
         "execution_count": None,
         "metadata": {},
         "outputs": [],
         "source": [
-            "# 4. Fetch Pexels B-Roll Videos\n",
+            "# 5. Fetch Pexels B-Roll Videos\n",
             "def fetch_pexels_broll():\n",
             "    headers = {'Authorization': PEXELS_API_KEY}\n",
             "    res = CONFIG['video_settings']['resolution']\n",
@@ -149,14 +205,14 @@ def create_colab_notebook(topic_slug, config, scenes, pexels_api_key):
         ]
     }
     
-    # 5. Scene Preview Rendering (ffmpeg-python, clean — no burned-in subs)
+    # 6. Scene Preview Rendering (ffmpeg-python, clean — no burned-in subs)
     cell_scene_previews = {
         "cell_type": "code",
         "execution_count": None,
         "metadata": {},
         "outputs": [],
         "source": [
-            "# 5. Render Scene Previews (FFmpeg — clean video, captions as VTT)\n",
+            "# 6. Render Scene Previews (FFmpeg — clean video, captions as VTT)\n",
             "import time\n",
             "import base64\n",
             "render_start = time.time()\n",
@@ -258,8 +314,8 @@ def create_colab_notebook(topic_slug, config, scenes, pexels_api_key):
             "elapsed = time.time() - render_start\n",
             "print(f'\\n=== All {len(scene_previews)} scene previews rendered in {elapsed:.1f}s! ===')\n",
             "print('Review each scene below. Toggle CC to preview captions.')\n",
-            "print('If you want to swap a scene, use Cell 6.')\n",
-            "print('When satisfied, run Cell 7 to stitch the final video.\\n')\n",
+            "print('If you want to swap a scene, use Cell 7.')\n",
+            "print('When satisfied, run Cell 8 to stitch the final video.\\n')\n",
             "\n",
             "# Build interactive carousel with CC toggle\n",
             "# Encode videos and VTTs as base64 for embedding\n",
@@ -311,14 +367,14 @@ def create_colab_notebook(topic_slug, config, scenes, pexels_api_key):
         ]
     }
     
-    # 6. Interactive Scene Swap (ffmpeg-python)
+    # 7. Scene Swap Tool
     cell_scene_swap = {
         "cell_type": "code",
         "execution_count": None,
         "metadata": {},
         "outputs": [],
         "source": [
-            "# 6. Scene Swap (Optional)\n",
+            "# 7. Scene Swap Tool\n",
             "# Change the scene number and search query below, then run this cell.\n",
             "# Re-run as many times as you want to try different B-roll for any scene.\n",
             "\n",
@@ -361,14 +417,14 @@ def create_colab_notebook(topic_slug, config, scenes, pexels_api_key):
         ]
     }
     
-    # 7. Final Stitch + SRT Generation
+    # 8. Final Stitch & Subtitle Merging
     cell_final_stitch = {
         "cell_type": "code",
         "execution_count": None,
         "metadata": {},
         "outputs": [],
         "source": [
-            "# 7. Stitch Final Video + Generate SRT Captions\n",
+            "# 8. Stitch Final Video and Merge SRT Captions\n",
             "import time\n",
             "stitch_start = time.time()\n",
             "\n",
@@ -423,14 +479,14 @@ def create_colab_notebook(topic_slug, config, scenes, pexels_api_key):
         ]
     }
     
-    # 8. Google Drive Export (video + captions)
+    # 9. Google Drive Export
     cell_export = {
         "cell_type": "code",
         "execution_count": None,
         "metadata": {},
         "outputs": [],
         "source": [
-            "# 8. Export to Google Drive (video + captions)\n",
+            "# 9. Export to Google Drive (video + captions)\n",
             "# Run this cell if you approve of the final video above!\n",
             "drive.mount('/content/drive')\n",
             "\n",
@@ -467,6 +523,7 @@ def create_colab_notebook(topic_slug, config, scenes, pexels_api_key):
         "cells": [
             cell_install,
             cell_config,
+            cell_directors_console,
             cell_audio,
             cell_broll,
             cell_scene_previews,
