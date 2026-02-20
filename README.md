@@ -23,7 +23,7 @@ Topic → AI Script → Voiceover → B-Roll → Subtitles → Rendered Video
 
 ```bash
 # Clone and enter the project
-git clone https://github.com/yourusername/youtube-video-generator.git
+git clone https://github.com/isthatamullet/youtube-video-generator.git
 cd youtube-video-generator
 
 # Create virtual environment
